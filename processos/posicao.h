@@ -6,25 +6,11 @@
 
 typedef struct Posicao
 {
-    union
-    {
-        struct
-        {
-            //Linha e coluna para salvar as posiçoes do caminho do explorador
-            int linha;
-            int coluna;
+    char valor;
 
-        } Mapeamento;
-        struct
-        {
-           int valor;
-           bool temChave;
-           bool temBau;
-
-        } celula;
-        
-        /* data */
-    } dados;
+    //Posição para armazenar o caminho do explorador
+    int linhaCaminho;
+    int colunaCaminho;
 
 } Posicao;
 
