@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "./leitura/leitura.h"
+#include "./backtracking/algoritmo.h"
+
 
 int main(int argc, char *argv[]) {
     // Define o arquivo de entrada
@@ -18,6 +20,10 @@ int main(int argc, char *argv[]) {
 
     // Imprime o Labirinto
     imprimeLabirinto(&labirinto);
+    
+    //Algoritmo
+    Posicao posicaoInicial = encontrarPontoInicial(&labirinto);
+    iniciarJogo(&labirinto, posicaoInicial);
 
     // Libera a memoria utilizada
     liberarLabirinto(&labirinto);

@@ -6,6 +6,7 @@
 #include "../estruturas/labirinto.h"
 
 bool lerLabirinto(const char *nomeArquivo, Labirinto *labirinto);
+Posicao encontrarPontoInicial (Labirinto *labirinto);
 void liberarLabirinto(Labirinto *labirinto);
 void imprimeLabirinto(Labirinto *labirinto);
 

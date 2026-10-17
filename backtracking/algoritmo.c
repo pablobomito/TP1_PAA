@@ -1,8 +1,10 @@
-#include "./estruturas/labirinto.h"
+#include "algoritmo.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 int qtdChavesEncontradas = 0;
 bool fim = false ;
+bool barreira = false;
 int count = 0;
 
 Posicao *caminho;
@@ -12,66 +14,82 @@ void initCaminho (int tamanho) {
 }
 
 void printarCaminho () {
+    printf("\nPercurso: ");
     for (int i=0; i<count; i++){
         printf("[%d, %d]", caminho[i].linhaCaminho, caminho[i].colunaCaminho);
     }
 }
 
 
-bool verifica (Labirinto *labirinto, int lin, int col) {
-    
-}
-void backtracking (Labirinto *labirinto,int lin_init,int col_init) {
-
-    Posicao **matriz = labirinto->matriz;
+void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_init) {
 
     if (fim){
         return;
     }
 
-    if (lin_init >= labirinto->totalLinhas || col_init>= labirinto->totalColunas || lin_init < 0 || col_init < 0) return;
+    if (lin_init >= labirinto->totalLinhas || col_init>= labirinto->totalColunas || lin_init < 0 || col_init < 0) {
+        barreira = true;
+        return;
+    } 
 
-    if (matriz[lin_init][col_init].valor == '1') return;
+    if (matriz[lin_init][col_init].valor == '1'){
+        barreira = true;
+        return;
+    }
     
     if (matriz[lin_init][col_init].valor == 'X') {
         if (labirinto->totalChaves ==qtdChavesEncontradas )
         {
             fim=true;
             printf("endgame\n");
+            caminho[count].linhaCaminho = lin_init;
+            caminho[count].colunaCaminho = col_init;
+            count++;
+
             printarCaminho();
         }
         return;
     }
 
+    if (matriz[lin_init][col_init].valor == '#'){
+        barreira = false;
+        return;
+    }
+
     if (matriz[lin_init][col_init].valor == 'C'){
         qtdChavesEncontradas++;
-        matriz[lin_init][col_init].valor == '#';
+        matriz[lin_init][col_init].valor = '#';
         caminho[count].linhaCaminho = lin_init;
         caminho[count].colunaCaminho = col_init;
         count++;
+        barreira = false;
     } else {
         matriz[lin_init][col_init].valor='1';
         caminho[count].linhaCaminho = lin_init;
         caminho[count].colunaCaminho = col_init;
         count++;
+        barreira = false;
     }
 
         //Passo recursivo que verifica todos as direções possiveis
-        if(!fim)
-            {
-                backtracking(matriz,lin_init+1,col_init);
-                backtracking(matriz,lin_init-1,col_init);
-                backtracking(matriz,lin_init,col_init+1);
-                backtracking(matriz,lin_init,col_init-1);
-            }
+        
+        backtracking(labirinto,matriz,lin_init,col_init-1);
+        backtracking(labirinto,matriz,lin_init-1,col_init);
+        backtracking(labirinto,matriz,lin_init,col_init+1);
+        backtracking(labirinto,matriz,lin_init+1,col_init);
+
+
 
         //Volta recursiva
-        //Retira visitado da casa e, caso a propria, possui uma chave, irá removera-la. Além de que o jogo verificará se é um caso impossivel
+        //Retira *visitado da casa e, caso a propria, possui uma chave, irá remove-la. Além de que o jogo verificará se é um caso impossivel
+        
         if (!fim && matriz[lin_init][col_init].valor == '#'){
                
-            fim = true;
-            printf("\nNão há um caminho possível para a entrada de dados fornecida");
-            return;
+            if (barreira){
+                fim = true;
+                printf("\nNão há um caminho possível para a entrada de dados fornecida");
+                return;
+            }
                     
             if (qtdChavesEncontradas>0)
                 {
@@ -87,3 +105,8 @@ void backtracking (Labirinto *labirinto,int lin_init,int col_init) {
             count--;
         }
     };
+
+    void iniciarJogo (Labirinto *labirinto, Posicao posInicial){
+        initCaminho(labirinto->totalLinhas);
+        backtracking(labirinto,labirinto->matriz, posInicial.linhaCaminho, posInicial.colunaCaminho);
+    }
