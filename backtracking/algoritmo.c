@@ -106,7 +106,82 @@ void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_i
         }
     };
 
-    void iniciarJogo (Labirinto *labirinto, Posicao posInicial){
-        initCaminho(labirinto->totalLinhas);
-        backtracking(labirinto,labirinto->matriz, posInicial.linhaCaminho, posInicial.colunaCaminho);
+void imprimirCaminhoCriativo(const Labirinto *labirinto, const char *mapaOriginal) {
+
+    if (count == 0)
+        return;
+
+    Posicao ultima = caminho[count - 1];
+
+    if (mapaOriginal[ultima.linhaCaminho * labirinto->totalColunas + ultima.colunaCaminho] != 'X')
+        return;
+
+    printf("\n\n=== CAMINHO NO LABIRINTO ===\n");
+    printf("A = inicio | C = chave | X = bau | * = percurso | # = parede | . = livre\n\n");
+
+    for (int i = 0; i < labirinto->totalLinhas; i++) {
+        for (int j = 0; j < labirinto->totalColunas; j++) {
+
+            char original = mapaOriginal[i * labirinto->totalColunas + j];
+            bool pertenceAoCaminho = false;
+
+            for (int k = 0; k < count; k++) {
+                if (i == caminho[k].linhaCaminho &&
+                    j == caminho[k].colunaCaminho) {
+
+                    pertenceAoCaminho = true;
+                    break;
+                }
+            }
+
+            if (original == 'A' || original == 'C' || original == 'X')
+                printf("%c ", original);
+            else if (original == '1')
+                printf("# ");
+            else if (pertenceAoCaminho)
+                printf("* ");
+            else
+                printf(". ");
+        }
+
+        printf("\n");
     }
+}
+
+    void iniciarJogo(Labirinto *labirinto, Posicao posInicial) {
+
+    int total = labirinto->totalLinhas * labirinto->totalColunas;
+
+    char *mapaOriginal = malloc((size_t)total * sizeof(char));
+
+    if (mapaOriginal == NULL) {
+        printf("Erro: nao foi possivel copiar o mapa.\n");
+        return;
+    }
+
+    for (int i = 0; i < labirinto->totalLinhas; i++) {
+        for (int j = 0; j < labirinto->totalColunas; j++) {
+
+            mapaOriginal[i * labirinto->totalColunas + j] =
+                labirinto->matriz[i][j].valor;
+        }
+    }
+
+    initCaminho(total);
+
+    if (caminho == NULL) {
+        printf("Erro: nao foi possivel alocar o caminho.\n");
+        free(mapaOriginal);
+        return;
+    }
+
+    backtracking(labirinto, labirinto->matriz,
+                 posInicial.linhaCaminho,
+                 posInicial.colunaCaminho);
+
+    imprimirCaminhoCriativo(labirinto, mapaOriginal);
+
+    free(mapaOriginal);
+    free(caminho);
+    caminho = NULL;
+}
