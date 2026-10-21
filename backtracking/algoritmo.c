@@ -7,7 +7,6 @@ int totalChamadasRecursao = 0;
 int profundidade = 0;
 int maxProfundidade = 0;
 bool fim = false ;
-bool barreira = false;
 int count = 0;
 
 Posicao *caminho;
@@ -25,7 +24,6 @@ void printarCaminho () {
 
 
 void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_init) {
-
     totalChamadasRecursao++;
 
     if (profundidade > maxProfundidade){
@@ -36,12 +34,10 @@ void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_i
     }
 
     if (lin_init >= labirinto->totalLinhas || col_init>= labirinto->totalColunas || lin_init < 0 || col_init < 0) {
-        barreira = true;
         return;
     } 
 
     if (matriz[lin_init][col_init].valor == '1'){
-        barreira = true;
         return;
     }
     
@@ -60,7 +56,6 @@ void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_i
     }
 
     if (matriz[lin_init][col_init].valor == '#'){
-        barreira = false;
         return;
     }
 
@@ -70,23 +65,21 @@ void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_i
         caminho[count].linhaCaminho = lin_init;
         caminho[count].colunaCaminho = col_init;
         count++;
-        barreira = false;
     } else {
         matriz[lin_init][col_init].valor='1';
         caminho[count].linhaCaminho = lin_init;
         caminho[count].colunaCaminho = col_init;
         count++;
-        barreira = false;
     }
 
     profundidade++;
 
         //Passo recursivo que verifica todos as direções possiveis
         
-        backtracking(labirinto,matriz,lin_init,col_init-1);
-        backtracking(labirinto,matriz,lin_init-1,col_init);
         backtracking(labirinto,matriz,lin_init,col_init+1);
         backtracking(labirinto,matriz,lin_init+1,col_init);
+        backtracking(labirinto,matriz,lin_init,col_init-1);
+        backtracking(labirinto,matriz,lin_init-1,col_init);
 
 
 
@@ -94,13 +87,7 @@ void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_i
         //Retira *visitado da casa e, caso a propria, possui uma chave, irá remove-la. Além de que o jogo verificará se é um caso impossivel
         
         if (!fim && matriz[lin_init][col_init].valor == '#'){
-               
-            if (barreira){
-                fim = true;
-                printf("\nNão há um caminho possível para a entrada de dados fornecida");
-                return;
-            }
-                    
+                     
             if (qtdChavesEncontradas>0)
                 {
                     qtdChavesEncontradas--;
