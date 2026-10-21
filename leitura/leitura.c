@@ -71,26 +71,21 @@ bool lerLabirinto(const char *nomeArquivo, Labirinto *labirinto){
     return true;
 }
 
-Posicao encontrarPontoInicial (Labirinto *labirinto){
+bool encontrarPontoInicial (Labirinto *labirinto, Posicao *pos_inicial){
     Posicao **matriz = labirinto->matriz;
-    Posicao posInicial;
-    bool encontrou = false;
 
     for (int i = 0; i < labirinto->totalLinhas; i++){
         for (int j = 0; j < labirinto->totalColunas; j++){
             if (matriz[i][j].valor == 'A'){
-                posInicial.linhaCaminho = i;
-                posInicial.colunaCaminho = j;
-                encontrou = true;
-                break;
+                pos_inicial->linhaCaminho = i;
+                pos_inicial->colunaCaminho = j;
+                return true;
             }
         }
     }
 
-    if (encontrou){
-        return posInicial;
-    }
     printf("Posição inicial não definida!");
+    return false;
 }
 
 void liberarLabirinto(Labirinto *labirinto){

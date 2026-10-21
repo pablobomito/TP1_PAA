@@ -6,6 +6,6 @@
 void initCaminho(int tamanho);
 void printarCaminho();
 void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_init);
-void iniciarJogo (Labirinto *labirinto, Posicao posInicial);
+void iniciarJogo (Labirinto *labirinto, Posicao posInicial, bool modo_analise);
 
 #endif

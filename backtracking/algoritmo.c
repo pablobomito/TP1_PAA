@@ -3,6 +3,9 @@
 #include <stdlib.h>
 
 int qtdChavesEncontradas = 0;
+int totalChamadasRecursao = 0;
+int profundidade = 0;
+int maxProfundidade = 0;
 bool fim = false ;
 bool barreira = false;
 int count = 0;
@@ -23,6 +26,11 @@ void printarCaminho () {
 
 void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_init) {
 
+    totalChamadasRecursao++;
+
+    if (profundidade > maxProfundidade){
+        maxProfundidade = profundidade;
+    }
     if (fim){
         return;
     }
@@ -71,6 +79,8 @@ void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_i
         barreira = false;
     }
 
+    profundidade++;
+
         //Passo recursivo que verifica todos as direções possiveis
         
         backtracking(labirinto,matriz,lin_init,col_init-1);
@@ -96,6 +106,7 @@ void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_i
                     qtdChavesEncontradas--;
                     matriz[lin_init][col_init].valor = 'C';
                     count--;
+                    profundidade--;
                 }
 
     
@@ -103,6 +114,7 @@ void backtracking (Labirinto *labirinto, Posicao **matriz,int lin_init,int col_i
 
             matriz[lin_init][col_init].valor = '0' ;
             count--;
+            profundidade--;
         }
     };
 
@@ -148,7 +160,7 @@ void imprimirCaminhoCriativo(const Labirinto *labirinto, const char *mapaOrigina
     }
 }
 
-    void iniciarJogo(Labirinto *labirinto, Posicao posInicial) {
+    void iniciarJogo(Labirinto *labirinto, Posicao posInicial, bool modo_analise) {
 
     int total = labirinto->totalLinhas * labirinto->totalColunas;
 
@@ -179,9 +191,22 @@ void imprimirCaminhoCriativo(const Labirinto *labirinto, const char *mapaOrigina
                  posInicial.linhaCaminho,
                  posInicial.colunaCaminho);
 
-    imprimirCaminhoCriativo(labirinto, mapaOriginal);
-
+    if (!fim){
+        printf("\nNão há um caminho possível para a entrada de dados fornecida");
+    } else {
+        if (modo_analise){
+            printf("\n\nTamanho do labirinto: %dx%d\n", labirinto->totalLinhas, labirinto->totalColunas);
+            printf("Quantidade de chaves: %d\n", labirinto->totalChaves);
+            printf("Quantidade total de chamadas recursivas: %d\n", totalChamadasRecursao);
+            printf("Nível máximo de recursão: %d\n", maxProfundidade);
+            
+        } else {
+            imprimirCaminhoCriativo(labirinto, mapaOriginal);
+        }
+    }
+    
     free(mapaOriginal);
     free(caminho);
     caminho = NULL;
+    
 }
