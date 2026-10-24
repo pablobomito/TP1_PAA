@@ -2,6 +2,7 @@
 #include <string.h>
 #include "./leitura/leitura.h"
 #include "./backtracking/algoritmo.h"
+#include "./gerador_mapa/geradorMapa.h"
 
 bool modoAnalise = false;
 
@@ -17,22 +18,56 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (nomeArquivo == NULL){
-        nomeArquivo = "entrada.txt";
+    int opcao;
+
+    printf("=== MENU PRINCIPAL ===\n");
+    printf("1 - Ler labirinto de um arquivo\n");
+    printf("2 - Criar um novo labirinto\n");
+    printf("Escolha uma opcao: ");
+
+    if (scanf("%d", &opcao) != 1) {
+        printf("Opcao invalida.\n");
+        return 1;
     }
 
     // Inicializa a estrutura do labirinto
     Labirinto labirinto = {0};
 
-    // Tenta ler o arquivo
-    printf("Lendo arquivo: %s\n\n", nomeArquivo);
+    switch (opcao) {
+        case 1: {
+            // Usa o arquivo informado ou o arquivo padrao.
+            if (nomeArquivo == NULL) {
+                nomeArquivo = "entrada.txt";
+            }
 
-    if (!lerLabirinto(nomeArquivo, &labirinto)){
-        printf("Erro: nao foi possivel ler o labirinto.\n");
-        return 1;
+            printf("\nLendo arquivo: %s\n\n", nomeArquivo);
+
+            if (!lerLabirinto(nomeArquivo, &labirinto)) {
+                printf("Erro: nao foi possivel ler o labirinto.\n");
+                return 1;
+            }
+
+            break;
+        }
+
+        case 2: {
+            printf("\nCriando um novo labirinto...\n\n");
+
+            if (!gerarMapa(&labirinto)) {
+                printf("Erro ao gerar o labirinto.\n");
+                return 1;
+            }
+
+            break;
+        }
+
+        default:
+            printf("Opcao invalida.\n");
+            return 1;
     }
 
     // Imprime o Labirinto
+    printf("\n");
     imprimeLabirinto(&labirinto);
     
     //Algoritmo
@@ -47,4 +82,4 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-//gcc main.c leitura/leitura.c -o programa
+// gcc main.c leitura/leitura.c backtracking/algoritmo.c gerador_mapa/geradorMapa.c -o p
