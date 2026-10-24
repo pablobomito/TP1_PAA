@@ -7,7 +7,7 @@
 } while(0)
 
 // A funcao Principal de Gerar Labirinto
-int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminhoViavel, int *qtdcaminhoViavel) {
+int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminhoViavel, int *qtdcaminhoViavel, int limiteReto, int caminhoMinimoFracao) {
     int linhas = lab->totalLinhas;
     int colunas = lab->totalColunas;
 
@@ -19,8 +19,7 @@ int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminho
     int dl[] = {-2, 2, 0, 0}; // Usado para a movimentacao vertical da busca em profundidade
     int dc[] = {0, 0, -2, 2}; // Usado para a movimentacao horizontal da busca em profundidade
 
-    int limiteReto = LIMITE_RETO;
-    int caminhoMinimo = (lab->totalLinhas * lab->totalColunas)/CAMINHO_MINIMO_FRACAO; 
+    int caminhoMinimo = (lab->totalLinhas * lab->totalColunas)/caminhoMinimoFracao; 
 
     // Variaveis para caso o labirinto termine muito rapido, elas guardam a ultima posicao e movimento decidido, para ficar guardado um caminho possivel
         // Depois de guardado o movimento e sua posicao, o algoritmo segue outro caminho com o intuito de aumentar o tamanho do labirinto
@@ -216,12 +215,11 @@ int ehCaminho(char celula) {
 }
 
 // Função para abrir mais caminhos no labirinto, para deixar ele mais interessante
-int abrirCaminhosExtras(Labirinto *lab) {
+int abrirCaminhosExtras(Labirinto *lab, int espessuraParedeMax, int quantidadeExtrasFracao) {
     int linhas = lab->totalLinhas;
     int colunas = lab->totalColunas;
 
-    int espessuraParedeMax = ESPESSURA_PAREDE_MAX;
-    int quantidadeExtras = (linhas * colunas) / QTD_CAMINHOS_EXTRAS_FRACAO;
+    int quantidadeExtras = (linhas * colunas) / quantidadeExtrasFracao;
 
     // Validação inicial antecipada
     if (lab == NULL || lab->matriz == NULL ||
@@ -336,107 +334,100 @@ void posicaoAleatoria(Posicao *posicao, int limiteLinha, int limiteColuna) {
 }
 
 // Funcao que controla o menu interativo da criacao de labirintos
-void menu(Labirinto *labirinto, Posicao *inicio, Posicao *fim, int *nChaves){
-    
-    printf("Geracao de Mapa\n");
+void menu(Labirinto *labirinto, Posicao *inicio, Posicao *fim, int *nChaves, int *limiteReto, int *espessuraParedeMax, int *quantidadeExtrasFracao, int *caminhoMinimoFracao) {
+          
+    printf("========================================\n");
+    printf("         GERADOR DE LABIRINTO           \n");
+    printf("========================================\n\n");
 
+    // DIMENSOES DO LABIRINTO
     while (1) {
-        printf("Digite o numero de linhas e colunas (ambos maiores que 3): ");
-        
+        printf("Digite o numero de linhas e colunas (minimo 4): ");
         if (scanf("%d %d", &labirinto->totalLinhas, &labirinto->totalColunas) != 2) {
-            printf("Entrada invalida. Digite apenas numeros inteiros.\n");
+            printf("[Erro] Digite apenas numeros inteiros.\n");
             while (getchar() != '\n');
             continue;
         }
 
         if (labirinto->totalLinhas > 3 && labirinto->totalColunas > 3) {
-            break; 
+            break;
         }
-
-        printf("Erro: Os valores devem ser maiores que 3.\n");
+        printf("[Erro] Os valores devem ser maiores que 3.\n");
     }
 
-    printf("Digite a linha e a coluna iniciais (negativos para aleatorio): ");
-
+    // POSICAO INICIAL (A)
+    printf("\n--- Posicao de Inicio (A) ---\n");
+    printf("Digite a linha e a coluna (ou valores negativos para sortear): ");
     if (scanf("%d %d", &inicio->linhaCaminho, &inicio->colunaCaminho) != 2) {
-        printf("Entrada invalida.\n");
-        return;
+        inicio->linhaCaminho = -1; // Força aleatório em caso de erro de leitura
+        inicio->colunaCaminho = -1;
+        while (getchar() != '\n');
+    }
+    
+    if (inicio->linhaCaminho < 0 || inicio->colunaCaminho < 0 || 
+        inicio->linhaCaminho >= labirinto->totalLinhas || inicio->colunaCaminho >= labirinto->totalColunas) {
+        posicaoAleatoria(inicio, labirinto->totalLinhas, labirinto->totalColunas);
+        printf("-> Inicio sorteado automaticamente: (%d, %d)\n", inicio->linhaCaminho, inicio->colunaCaminho);
     }
 
-    while (
-        inicio->linhaCaminho >= labirinto->totalLinhas ||
-        inicio->colunaCaminho >= labirinto->totalColunas
-    ) {
-        printf("Posicao fora do labirinto. Digite novamente: ");
-
-        if (scanf("%d %d", &inicio->linhaCaminho, &inicio->colunaCaminho) != 2) {
-            printf("Entrada invalida.\n");
-            return;
-        }
-    }
-
-    posicaoAleatoria(inicio, labirinto->totalLinhas, labirinto->totalColunas);
-
-    printf("Digite a linha e a coluna do bau (negativos para aleatorio): ");
-
+    // POSIÇÃO FINAL (X)
+    printf("\n--- Posicao do Bau (X) ---\n");
+    printf("Digite a linha e a coluna (ou valores negativos para sortear): ");
     if (scanf("%d %d", &fim->linhaCaminho, &fim->colunaCaminho) != 2) {
-        printf("Entrada invalida.\n");
-        return;
+        fim->linhaCaminho = -1;
+        fim->colunaCaminho = -1;
+        while (getchar() != '\n');
     }
 
-    while (
-        fim->linhaCaminho >= labirinto->totalLinhas ||
-        fim->colunaCaminho >= labirinto->totalColunas ||
-        (
-            fim->linhaCaminho == inicio->linhaCaminho &&
-            fim->colunaCaminho == inicio->colunaCaminho
-        )
-    ) {
-        printf("Posicao invalida ou igual a entrada. Digite novamente: ");
-
-        if (scanf("%d %d", &fim->linhaCaminho, &fim->colunaCaminho) != 2) {
-            printf("Entrada invalida.\n");
-            return;
+    if (fim->linhaCaminho < 0 || fim->colunaCaminho < 0 || 
+        fim->linhaCaminho >= labirinto->totalLinhas || fim->colunaCaminho >= labirinto->totalColunas ||
+        (fim->linhaCaminho == inicio->linhaCaminho && fim->colunaCaminho == inicio->colunaCaminho)) {
+        
+        posicaoAleatoria(fim, labirinto->totalLinhas, labirinto->totalColunas);
+        while (fim->linhaCaminho == inicio->linhaCaminho && fim->colunaCaminho == inicio->colunaCaminho) {
+            posicaoAleatoria(fim, labirinto->totalLinhas, labirinto->totalColunas);
         }
+        printf("-> Bau sorteado automaticamente: (%d, %d)\n", fim->linhaCaminho, fim->colunaCaminho);
     }
 
-    posicaoAleatoria(
-        fim,
-        labirinto->totalLinhas,
-        labirinto->totalColunas
-    );
-
-    // Se alguma coordenada do bau foi sorteada,
-    // verifica novamente se nao coincide com a entrada.
-    while (
-        fim->linhaCaminho == inicio->linhaCaminho &&
-        fim->colunaCaminho == inicio->colunaCaminho
-    ) {
-        fim->linhaCaminho =
-            rand() % labirinto->totalLinhas;
-
-        fim->colunaCaminho =
-            rand() % labirinto->totalColunas;
+    // CONFIGURACOES EXTRAS
+    printf("\nDeseja configurar os parametros avancados do labirinto? (1- Sim / 0- Nao [Usar Padroes]): ");
+    int opcaoAvancada = 0;
+    if (scanf("%d", &opcaoAvancada) != 1) {
+        opcaoAvancada = 0;
+        while (getchar() != '\n');
     }
 
-    printf("Quantas chaves havera no labirinto? ");
+    // Atribui valores padrao iniciais
+    *limiteReto = LIMITE_RETO;
+    *espessuraParedeMax = ESPESSURA_PAREDE_MAX;
+    *quantidadeExtrasFracao = QTD_CAMINHOS_EXTRAS_FRACAO;
+    *caminhoMinimoFracao = CAMINHO_MINIMO_FRACAO;
+    int maxChaves = (labirinto->totalLinhas * labirinto->totalColunas) - 2;
+    *nChaves = NUMERO_CHAVE_PADRAO; // Valor padrão inicial de chaves
 
-    if (scanf("%d", nChaves) != 1) {
-        printf("Entrada invalida.\n");
-        return;
+    if (opcaoAvancada == 1) {
+        printf("\n--- Parametros Avancados ---\n");
+        
+        printf("Limite de movimentos retos [Padrao: 2]: ");
+        scanf("%d", limiteReto);
+
+        printf("Espessura maxima de parede [Padrao: 3]: ");
+        scanf("%d", espessuraParedeMax);
+
+        printf("Fracao de caminhos extras (Tamanho/X) [Padrao: 20]: ");
+        scanf("%d", quantidadeExtrasFracao);
+
+        printf("Fracao do caminho minimo A-X (Tamanho/X) [Padrao: 1]: ");
+        scanf("%d", caminhoMinimoFracao);
+
+        printf("Quantidade de chaves (Max: %d) [Padrao: %d]: ", maxChaves, *nChaves);
+        scanf("%d", nChaves);
     }
 
-    while (*nChaves > ((labirinto->totalLinhas * labirinto->totalColunas) - 2)){
-        printf("Quantidade superior ao espaco do labirinto. Digite novamente: ");
-        if (scanf("%d", nChaves) != 1) {
-            printf("Entrada invalida.\n");
-            return;
-        }
-    }
-
-    if (*nChaves < 0) {
-        *nChaves = 0;
-    }
+    // Validacao final de segurança para o numero de chaves
+    if (*nChaves > maxChaves) *nChaves = maxChaves;
+    if (*nChaves < 0) *nChaves = 0;
 }
 
 // Funcao Chamada pelo main
@@ -447,7 +438,12 @@ int gerarMapa(Labirinto *lab){
     Posicao inicio;
     Posicao fim;
 
-    menu(lab, &inicio, &fim, &lab->totalChaves);
+    int limiteReto;
+    int caminhoMinimoFracao;
+    int espessuraParedeMax;
+    int quantidadeExtraFracao;
+
+    menu(lab, &inicio, &fim, &lab->totalChaves, &limiteReto, &espessuraParedeMax, &quantidadeExtraFracao, &caminhoMinimoFracao);
 
     // Alocar os espacos para a matriz
     lab->matriz = malloc(lab->totalLinhas * sizeof(Posicao *));
@@ -462,16 +458,14 @@ int gerarMapa(Labirinto *lab){
 
 
     printf("Gerando labirinto...\n");
-    int sucesso = gerarLabirinto(lab, inicio, fim, caminhoViavel, &qtdCaminho);
+    int sucesso = gerarLabirinto(lab, inicio, fim, caminhoViavel, &qtdCaminho, limiteReto, caminhoMinimoFracao);
 
     if (!sucesso) {
         printf("Falha ao gerar o labirinto!\n");
     } else {
 
-        //randomizerDaBorda(lab, inicio, fim);
-
         //Adicionar caminhos extras (deixar o labirinto menos linear / com loops)
-        abrirCaminhosExtras(lab); // Ex: paredes de até tamanho 3, abre 5 extras
+        abrirCaminhosExtras(lab, espessuraParedeMax, quantidadeExtraFracao); // Ex: paredes de até tamanho 3, abre 5 extras
 
         // Adicionar Chaves ('C') ao longo do caminho viavel
         int chavesAdicionadas = adicionarChaves(lab, caminhoViavel, qtdCaminho, lab->totalChaves);

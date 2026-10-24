@@ -9,6 +9,8 @@
 #define ESPESSURA_PAREDE_MAX 3 // O quao espessa pode ser a parede para se considerar um caminho por ela
 #define QTD_CAMINHOS_EXTRAS_FRACAO 20 // Quantos caminhos extras um labirinto deve ter (Tamanho da matriz/QTD_CAMINHOS_EXTRAS_FRACAO)
 
+#define NUMERO_CHAVE_PADRAO 1
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,13 +29,13 @@ typedef struct { // Parede candidata ha virar um caminho
 } ParedeCandidata;
 
 // A funcao Principal de Gerar Labirinto
-int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminhoViavel, int *qtdcaminhoViavel);
+int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminhoViavel, int *qtdcaminhoViavel, int limiteReto, int caminhoMinimoFracao);
 
 // Confirma se uma celula eh caminho ou nao
 int ehCaminho(char celula);
 
 // Funcao para abrir mais caminhos no labirinto, para deixar ele mais interessante
-int abrirCaminhosExtras(Labirinto *lab);
+int abrirCaminhosExtras(Labirinto *lab, int espessuraParedeMax, int quantidadeExtras);
 
 // Adiciona as Chaves ao Longo do Caminho Viavel (O maior caminho que sai do A e chega ate o X)
 int adicionarChaves(Labirinto *lab, Posicao *caminho, int qtdPosicoes, int N);
@@ -42,7 +44,7 @@ int adicionarChaves(Labirinto *lab, Posicao *caminho, int qtdPosicoes, int N);
 void posicaoAleatoria(Posicao *posicao, int limiteLinha, int limiteColuna);
 
 // Funcao que controla o menu interativo da criacao de labirintos
-void menu(Labirinto *labirinto, Posicao *inicio, Posicao *fim, int *nChaves);
+void menu(Labirinto *labirinto, Posicao *inicio, Posicao *fim, int *nChaves, int *limiteReto, int *espessuraParedeMax, int *quantidadeExtrasFracao, int *caminhoMinimoFracao);
 
 // Funcao Chamada pelo main
 int gerarMapa(Labirinto *lab);
