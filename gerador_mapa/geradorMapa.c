@@ -1,9 +1,10 @@
 #include "geradorMapa.h"
 
-// Confirma se uma celula eh caminho ou nao
-int ehCaminho(char celula) {
-    return celula == '0' || celula == 'A' || celula == 'X';
-}
+// Macro auxiliar para facilitar a vizualizacao do codigo
+#define MARCAR_CAMINHO(l, c) do { \
+    lab->matriz[l][c].valor = '0'; \
+    visitado[l][c] = 1; \
+} while(0)
 
 // A funcao Principal de Gerar Labirinto
 int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminhoViavel, int *qtdcaminhoViavel) {
@@ -27,16 +28,6 @@ int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminho
     int melhorOrigemL = -1, melhorOrigemC = -1;
     int melhorDirecao = -1;
 
-    // Validacao
-    if (!lab || !lab->matriz ||
-        linhas < 3 || colunas < 3 ||
-        inicio.linhaCaminho < 0 || inicio.linhaCaminho >= linhas ||
-        inicio.colunaCaminho < 0 || inicio.colunaCaminho >= colunas ||
-        fim.linhaCaminho < 0 || fim.linhaCaminho >= linhas ||
-        fim.colunaCaminho < 0 || fim.colunaCaminho >= colunas ||
-        (inicio.linhaCaminho == fim.linhaCaminho && inicio.colunaCaminho == fim.colunaCaminho)) {
-        return 0;
-    }
 
     // Criando e Verificando a pilha e o vetor visitado
     visitado = malloc(linhas * sizeof(int *)); 
@@ -74,51 +65,34 @@ int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminho
     int inicioFalsoC = inicio.colunaCaminho;
 
     // ifs conferindo se ha a necessidade de o inicioFalso se diferir do inicio real, e se sim, onde ele ficara
-    if ((inicio.linhaCaminho % 2) != (fim.linhaCaminho % 2)){
-        if (inicio.linhaCaminho % 2){
-            inicioFalsoL--;
-        }
-        else if(inicio.linhaCaminho == 0){
-            inicioFalsoL++;
-        }
-        else{
-            inicioFalsoL--;
-        }
+    // LINHA
+    if ((inicio.linhaCaminho % 2) != (fim.linhaCaminho % 2)) {
+        if (inicio.linhaCaminho == 0) inicioFalsoL++;
+        else inicioFalsoL--;
     }
 
-    if ((inicio.colunaCaminho % 2) != (fim.colunaCaminho % 2)){
-        if (inicio.colunaCaminho % 2){
-            inicioFalsoC--;
-        }
-        else if(inicio.colunaCaminho == 0){
-            inicioFalsoC++;
-        }
-        else{
-            inicioFalsoC--;
-        }
+    // COLUNA
+    if ((inicio.colunaCaminho % 2) != (fim.colunaCaminho % 2)) {
+        if (inicio.colunaCaminho == 0) inicioFalsoC++;
+        else inicioFalsoC--;
     }
 
-    // Cuindando em caso do inicioFalso ficar na diagonal do inicio real
+    // Cuidando do caso em que o inicioFalso fica na diagonal do inicio real
     if (inicioFalsoL != inicio.linhaCaminho) {
-        lab->matriz[inicioFalsoL][inicio.colunaCaminho].valor = '0';
-        visitado[inicioFalsoL][inicio.colunaCaminho] = 1;
-    }
+        MARCAR_CAMINHO(inicioFalsoL, inicio.colunaCaminho); // Macro no topo desse arquivo do codigo, aqui simplesmente para facilitar a leitura
+                                                            // Marca essa celula como caminho (0 na matriz) e como visitado (1 em visitado)
+    } 
     else if (inicioFalsoC != inicio.colunaCaminho) {
-        lab->matriz[inicio.linhaCaminho][inicioFalsoC].valor = '0';
-        visitado[inicio.linhaCaminho][inicioFalsoC] = 1;
+        MARCAR_CAMINHO(inicio.linhaCaminho, inicioFalsoC);
     }
 
-    // Marcar o inicio real como caminho
-    lab->matriz[inicio.linhaCaminho][inicio.colunaCaminho].valor = '0';
-    visitado[inicio.linhaCaminho][inicio.colunaCaminho] = 1;
+    // Marcar o início real e o início falso como caminho
+    MARCAR_CAMINHO(inicio.linhaCaminho, inicio.colunaCaminho);
+    MARCAR_CAMINHO(inicioFalsoL, inicioFalsoC);
 
-    // Marcar a posicao inicial falso caminho
-    lab->matriz[inicioFalsoL][inicioFalsoC].valor = '0';
-    visitado[inicioFalsoL][inicioFalsoC] = 1;
 
-    // O inicio falso que vai servir como o comeco do busca em profundide
-    pilha[topo] = (Estado){inicioFalsoL, inicioFalsoC, -1, 0}; 
-    topo++; // A pilha comeca apenas com o inicio falso
+// O inicio falso que vai servir como o comeco da busca em profundidade
+    pilha[topo++] = (Estado){inicioFalsoL, inicioFalsoC, -1, 0}; 
 
     while (topo > 0) { // Enquanto houver algo na pilha
         Estado atual = pilha[topo - 1];
@@ -129,42 +103,44 @@ int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminho
             continue;
         }
 
-        // Variaveis para decidir a direcao da busca em profundidade
         int candidatos[4];
         int qtdCandidatos = 0;
         int temOutraDirecao = 0;
 
+        // Coleta direcoes validas
         for (int d = 0; d < 4; d++) {
-            int nl = atual.l + dl[d];
+
+            // nova linha e nova coluna
+            int nl = atual.l + dl[d]; 
             int nc = atual.c + dc[d];
 
             if (nl < 0 || nl >= linhas || nc < 0 || nc >= colunas || visitado[nl][nc]) {
                 continue;
             }
 
-            // Caso o proximo passo da busca seja o ultimo, ele guarda esse passa e sua posicao, 
-                /// e tenta seguir outro caminho (para criar labirintos maiores e mais interessantes)
+            // Se o proximo passo for o final
             if (nl == fim.linhaCaminho && nc == fim.colunaCaminho) {
-                if (topo < caminhoMinimo) {
-                    if (topo > melhorProfundidade) {
-                        melhorProfundidade = topo;
-                        melhorOrigemL = atual.l;
-                        melhorOrigemC = atual.c;
-                        melhorDirecao = d;
 
-                        *qtdcaminhoViavel = topo;
-                        for (int i = 0; i < topo; i++){
-                            caminhoViavel[i] = lab->matriz[pilha[i].l][pilha[i].c];
-                        }
+                // O algoritmo guarda o passo mais longe do inicio que
+                    //chega no fim, e continua a busca
+                if (topo < caminhoMinimo && topo > melhorProfundidade) {
+                    melhorProfundidade = topo;
+                    melhorOrigemL = atual.l;
+                    melhorOrigemC = atual.c;
+                    melhorDirecao = d;
+
+                    *qtdcaminhoViavel = topo;
+                    for (int i = 0; i < topo; i++){
+                        caminhoViavel[i] = lab->matriz[pilha[i].l][pilha[i].c];
                     }
-                    continue;
                 }
+                continue;
             }
 
             candidatos[qtdCandidatos++] = d;
-
-            if (d != atual.ultimaDirecao)
+            if (d != atual.ultimaDirecao) {
                 temOutraDirecao = 1;
+            }
         }
 
         if (qtdCandidatos == 0) {
@@ -172,76 +148,59 @@ int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminho
             continue;
         }
 
-        // O algoritmo tambem tenta evitar criar labirintos com apenas corredores retos, usando como base um limiteReto para o tamanho
+        // Filtro de corredores retos
         if (atual.comprimentoReto >= limiteReto && temOutraDirecao) {
-            int filtrados[4];
             int qtdFiltrados = 0;
-
             for (int i = 0; i < qtdCandidatos; i++) {
-                int d = candidatos[i];
-                if (d != atual.ultimaDirecao)
-                    filtrados[qtdFiltrados++] = d;
+                if (candidatos[i] != atual.ultimaDirecao) {
+                    candidatos[qtdFiltrados++] = candidatos[i];
+                }
             }
-
-            for (int i = 0; i < qtdFiltrados; i++)
-                candidatos[i] = filtrados[i];
-
             qtdCandidatos = qtdFiltrados;
         }
 
-        // Aleatorizando os candidatos para caminho
+        // Se apos o filtro sobrou 0 candidatos, recua
+        if (qtdCandidatos == 0) {
+            topo--;
+            continue;
+        }
 
-        int indice = rand() % qtdCandidatos;
-        int d = candidatos[indice];
+        // Aleatoriza e avança no labirinto
+        int d = candidatos[rand() % qtdCandidatos];
 
         int nl = atual.l + dl[d];
         int nc = atual.c + dc[d];
-
         int pl = atual.l + dl[d] / 2;
         int pc = atual.c + dc[d] / 2;
 
         // Movendo 2 posicoes no labirinto
         lab->matriz[pl][pc].valor = '0';
         lab->matriz[nl][nc].valor = '0';
-        visitado[nl][nc] = 1;
+        visitado[nl][nc] = 1; // Adicionando a nova posicao visitada
 
-        // Atualizando o quanto ele andou em linha reta ate agora
-        int novoComprimento;
-        if (d == atual.ultimaDirecao)
-            novoComprimento = atual.comprimentoReto + 1;
-        else
-            novoComprimento = 1;
+        int novoComprimento = (d == atual.ultimaDirecao) ? (atual.comprimentoReto + 1) : 1;
 
-        Estado novoEstado = {
-            nl,
-            nc,
-            d,
-            novoComprimento
-        };
-
-        pilha[topo++] = novoEstado;
+        pilha[topo++] = (Estado){nl, nc, d, novoComprimento};
     }
 
-    // Se ele nao chegou no fim do labirinto mas existe um melhor passo guardado para ele usar e chegar no final
+    // Apos o While, se não chegou no fim, usa o melhor passo alternativo
     if (!visitado[fim.linhaCaminho][fim.colunaCaminho] && melhorDirecao != -1) {
         int pl = melhorOrigemL + dl[melhorDirecao] / 2;
         int pc = melhorOrigemC + dc[melhorDirecao] / 2;
 
         lab->matriz[pl][pc].valor = '0';
-        lab->matriz[fim.linhaCaminho][fim.colunaCaminho].valor = '0';
-        visitado[fim.linhaCaminho][fim.colunaCaminho] = 1;
+        MARCAR_CAMINHO(fim.linhaCaminho, fim.colunaCaminho);
     }
 
     // O labirinto foi criado com sucesso
     int sucesso = visitado[fim.linhaCaminho][fim.colunaCaminho]; 
 
-    // Se tudo deu certo, ele escreve o A e o X em suas respectivas posicoes
     if (sucesso) {
         lab->matriz[inicio.linhaCaminho][inicio.colunaCaminho].valor = 'A';
         lab->matriz[fim.linhaCaminho][fim.colunaCaminho].valor = 'X';
     }
 
-    // Libera a matriz visitado
+    // Libera a memoria alocada
     for (int i = 0; i < linhas; i++) 
         free(visitado[i]);
 
@@ -251,23 +210,26 @@ int gerarLabirinto(Labirinto *lab, Posicao inicio, Posicao fim, Posicao *caminho
     return sucesso;
 }
 
-// Funcao para abrir mais caminhos no labirinto, para deixar ele mais interessante
+// Confirma se uma celula eh caminho ou nao
+int ehCaminho(char celula) {
+    return celula == '0' || celula == 'A' || celula == 'X';
+}
+
+// Função para abrir mais caminhos no labirinto, para deixar ele mais interessante
 int abrirCaminhosExtras(Labirinto *lab) {
+    int linhas = lab->totalLinhas;
+    int colunas = lab->totalColunas;
 
     int espessuraParedeMax = ESPESSURA_PAREDE_MAX;
-    int quantidadeExtras = (lab->totalLinhas * lab->totalColunas)/QTD_CAMINHOS_EXTRAS_FRACAO;
+    int quantidadeExtras = (linhas * colunas) / QTD_CAMINHOS_EXTRAS_FRACAO;
 
-    // Validacao
+    // Validação inicial antecipada
     if (lab == NULL || lab->matriz == NULL ||
-        lab->totalLinhas <= 0 || lab->totalColunas <= 0 ||
         espessuraParedeMax <= 0 || quantidadeExtras <= 0) {
         return 0;
     }
 
-    int linhas = lab->totalLinhas;
-    int colunas = lab->totalColunas;
     int capacidade = 2 * linhas * colunas;
-
     ParedeCandidata *candidatas = malloc(capacidade * sizeof(ParedeCandidata));
     if (candidatas == NULL) return 0;
 
@@ -275,38 +237,41 @@ int abrirCaminhosExtras(Labirinto *lab) {
     int dl[] = {0, 1};
     int dc[] = {1, 0};
 
-    // Passando por toda a matriz, se achar uma parede, connfere se seu comprimento <= espessura maxima, se sim, ele adiciona na lista de candidatas
+    // Varredura para encontrar as paredes candidatas
     for (int d = 0; d < 2; d++) {
+        int dir_l = dl[d];
+        int dir_c = dc[d];
+
         for (int l = 0; l < linhas; l++) {
             for (int c = 0; c < colunas; c++) {
-
                 if (!ehCaminho(lab->matriz[l][c].valor)) continue;
 
-                int nl = l + dl[d];
-                int nc = c + dc[d];
+                int pl = l + dir_l; // Proxima Linha (linha atual + direcao linha)
+                int pc = c + dir_c; // Proxima Coluna (Coluna atual + direcao Coluna)
                 int comprimento = 0;
 
-                while (nl >= 0 && nl < linhas && nc >= 0 && nc < colunas && lab->matriz[nl][nc].valor == '1') {
+                // Saindo de uma celula caminho, quao espesso sao as paredes do seu lado
+                while (pl >= 0 && pl < linhas && pc >= 0 && pc < colunas && 
+                    lab->matriz[pl][pc].valor == '1' && comprimento <= espessuraParedeMax) {
                     comprimento++;
-                    nl += dl[d];
-                    nc += dc[d];
+                    pl += dir_l;
+                    pc += dir_c;
                 }
 
-                if (comprimento >= 1 &&
-                    comprimento <= espessuraParedeMax &&
-                    nl >= 0 && nl < linhas &&
-                    nc >= 0 && nc < colunas &&
-                    ehCaminho(lab->matriz[nl][nc].valor)) {
+                // Valida se o comprimento está dentro do limite e se termina em um caminho válido
+                if (comprimento >= 1 && comprimento <= espessuraParedeMax &&
+                    pl >= 0 && pl < linhas && pc >= 0 && pc < colunas &&
+                    ehCaminho(lab->matriz[pl][pc].valor)) {
 
                     if (totalCandidatas < capacidade) {
-                        candidatas[totalCandidatas++] = (ParedeCandidata) {l, c, dl[d], dc[d], comprimento};
+                        candidatas[totalCandidatas++] = (ParedeCandidata){l, c, dir_l, dir_c, comprimento};
                     }
                 }
             }
         }
     }
 
-    // Desordena a lista de candidatas
+    // Embaralha a lista de candidatas (Fisher-Yates Shuffle)
     for (int i = totalCandidatas - 1; i > 0; i--) {
         int j = rand() % (i + 1);
         ParedeCandidata temp = candidatas[i];
@@ -320,30 +285,9 @@ int abrirCaminhosExtras(Labirinto *lab) {
     for (int i = 0; i < totalCandidatas && abertas < quantidadeExtras; i++) {
         ParedeCandidata p = candidatas[i];
 
-        int nl = p.l + p.dl;
-        int nc = p.c + p.dc;
-        int comprimento = 0;
-
-        while (nl >= 0 && nl < linhas && nc >= 0 && nc < colunas && lab->matriz[nl][nc].valor == '1') {
-            comprimento++;
-            nl += p.dl;
-            nc += p.dc;
+        for (int k = 1; k <= p.comprimento; k++) {
+            lab->matriz[p.l + k * p.dl][p.c + k * p.dc].valor = '0';
         }
-
-        if (comprimento != p.comprimento ||
-            comprimento > espessuraParedeMax ||
-            nl < 0 || nl >= linhas ||
-            nc < 0 || nc >= colunas ||
-            !ehCaminho(lab->matriz[nl][nc].valor)) {
-            continue;
-        }
-
-        for (int k = 1; k <= comprimento; k++) {
-            int pl = p.l + k * p.dl;
-            int pc = p.c + k * p.dc;
-            lab->matriz[pl][pc].valor = '0';
-        }
-
         abertas++;
     }
 
@@ -351,58 +295,44 @@ int abrirCaminhosExtras(Labirinto *lab) {
     return abertas;
 }
 
-// Adiciona as Chaves ao Longo do Caminho Viavel (O maior caminho que sai do A e chega ate o X)
+// Adiciona as Chaves pelo Caminho Viavel (O maior caminho de A ate X)
 int adicionarChaves(Labirinto *lab, Posicao *caminho, int qtdPosicoes, int nChaves){
     if (lab == NULL || lab->matriz == NULL || caminho == NULL || qtdPosicoes <= 0 || nChaves <= 0) {
         return 0;
     }
 
-    Posicao *candidatas = malloc(qtdPosicoes * sizeof(Posicao));
-    if (candidatas == NULL) return 0;
-
-    // Todas as celulas do caminho sao candidatas para uma chave
-    for (int i = 0; i < qtdPosicoes; i++)
-        candidatas[i] = caminho[i];
-
+    // Embaralha o vetor caminho diretamente (Fisher-Yates Shuffle)
+    // Esse vetor nao vai ser mais usado depois
     for (int i = qtdPosicoes - 1; i > 0; i--) {
         int j = rand() % (i + 1);
-        Posicao temp = candidatas[i];
-        candidatas[i] = candidatas[j];
-        candidatas[j] = temp;
+        Posicao temp = caminho[i];
+        caminho[i] = caminho[j];
+        caminho[j] = temp;
     }
 
     int adicionadas = 0;
 
-    // Contato que o espaco no caminho escolhido seja 0 e seja diferente de A, X e C, ele vai receber uma chave
+    // Tenta colocar as chaves nas posições embaralhadas
     for (int i = 0; i < qtdPosicoes && adicionadas < nChaves; i++) {
-        int l = candidatas[i].linhaCaminho;
-        int c = candidatas[i].colunaCaminho;
+        int l = caminho[i].linhaCaminho;
+        int c = caminho[i].colunaCaminho;
 
-        if (lab->matriz[l][c].valor == 'A' ||
-            lab->matriz[l][c].valor == 'X' ||
-            lab->matriz[l][c].valor == 'C') {
-            continue;
-        }
-
+        // Se for um espaço vazio '0', coloca a chave 'C'
         if (lab->matriz[l][c].valor == '0') {
             lab->matriz[l][c].valor = 'C';
             adicionadas++;
         }
     }
-
-    free(candidatas);
     return adicionadas;
 }
 
 // Funcao para aleatorizar a posicao do inicio e do fim, caso solicitado no menu
 void posicaoAleatoria(Posicao *posicao, int limiteLinha, int limiteColuna) {
-    if (posicao->linhaCaminho < 0) {
+    if (posicao->linhaCaminho < 0)
         posicao->linhaCaminho = rand() % limiteLinha;
-    }
 
-    if (posicao->colunaCaminho < 0) {
+    if (posicao->colunaCaminho < 0)
         posicao->colunaCaminho = rand() % limiteColuna;
-    }
 }
 
 // Funcao que controla o menu interativo da criacao de labirintos
