@@ -412,13 +412,13 @@ void menu(Labirinto *labirinto, Posicao *inicio, Posicao *fim, int *nChaves, int
         printf("Limite de movimentos retos [Padrao: 2]: ");
         scanf("%d", limiteReto);
 
-        printf("Espessura maxima de parede [Padrao: 3]: ");
+        printf("Espessura maxima de parede para criar corredores [Padrao: 3]: ");
         scanf("%d", espessuraParedeMax);
 
         printf("Fracao de caminhos extras (Tamanho/X) [Padrao: 20]: ");
         scanf("%d", quantidadeExtrasFracao);
 
-        printf("Fracao do caminho minimo A-X (Tamanho/X) [Padrao: 1]: ");
+        printf("Fracao do caminho minimo A-X (Tamanho/X) [Padrao: 5]: ");
         scanf("%d", caminhoMinimoFracao);
 
         printf("Quantidade de chaves (Max: %d) [Padrao: %d]: ", maxChaves, *nChaves);
