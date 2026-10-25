@@ -431,15 +431,19 @@ int gerarMapa(Labirinto *lab) {
         
         printf("Limite de movimentos retos [Padrao: %d]: ", limiteReto);
         scanf("%d", &limiteReto);
+        if (limiteReto < 1) limiteReto = 1; // Minimo de 1 movimento reto
 
         printf("Espessura maxima de parede para criar corredores [Padrao: %d]: ", espessuraParedeMax);
         scanf("%d", &espessuraParedeMax);
+        if (espessuraParedeMax < 1) espessuraParedeMax = 1; // Minimo 1
 
         printf("Fracao de caminhos extras (Tamanho/X) [Padrao: %d]: ", quantidadeExtraFracao);
         scanf("%d", &quantidadeExtraFracao);
+        if (quantidadeExtraFracao < 1) quantidadeExtraFracao = 1; // Evita divisao por zero ou negativos
 
         printf("Fracao do caminho minimo A-X (Tamanho/X) [Padrao: %d]: ", caminhoMinimoFracao);
         scanf("%d", &caminhoMinimoFracao);
+        if (caminhoMinimoFracao < 1) caminhoMinimoFracao = 1; // Evita divisao por zero ou negativos
 
         printf("Quantidade de chaves (Max: %d) [Padrao: %d]: ", qtdCaminho, lab->totalChaves);
         scanf("%d", &lab->totalChaves);
