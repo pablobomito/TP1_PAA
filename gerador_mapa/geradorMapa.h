@@ -43,9 +43,6 @@ int adicionarChaves(Labirinto *lab, Posicao *caminho, int qtdPosicoes, int N);
 // Funcao para aleatorizar a posicao do inicio e do fim, caso solicitado no menu
 void posicaoAleatoria(Posicao *posicao, int limiteLinha, int limiteColuna);
 
-// Funcao que controla o menu interativo da criacao de labirintos
-void menu(Labirinto *labirinto, Posicao *inicio, Posicao *fim, int *nChaves, int *limiteReto, int *espessuraParedeMax, int *quantidadeExtrasFracao, int *caminhoMinimoFracao);
-
 // Funcao Chamada pelo main
 int gerarMapa(Labirinto *lab);
 
